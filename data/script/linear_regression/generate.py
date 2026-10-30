@@ -7,8 +7,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from loguru import logger
 
-DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parents[1] / "generated_data"
+DEFAULT_OUTPUT_DIR = Path(__file__).resolve().parents[2] / "generated_data" / "linear_regression"
 TRUE_WEIGHTS = np.array([1.5, -2.0, 0.5, 3.0, -1.0, 2.5, -0.75, 1.25, -3.5, 0.8])
 FEATURE_NAMES = [f"feat_{i}" for i in range(1, len(TRUE_WEIGHTS) + 1)]
 
@@ -59,14 +60,15 @@ def generate_datasets(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--samples", type=int, default=100)
-    parser.add_argument("--outliers", type=int, default=8)
+    parser.add_argument("--outliers", type=int, default=3)
     parser.add_argument("--seed", type=int, default=7523)
     parser.add_argument("--intercept", type=float, default=1.25)
-    parser.add_argument("--noise-std", type=float, default=1.0)
-    parser.add_argument("--outlier-shift", type=float, default=35.0)
+    parser.add_argument("--noise-std", type=float, default=10.0)
+    parser.add_argument("--outlier-shift", type=float, default=200.0)
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     args = parser.parse_args()
 
+    logger.info("Generating linear regression datasets")
     clean, with_outliers = generate_datasets(
         n_samples=args.samples,
         n_outliers=args.outliers,
@@ -81,11 +83,7 @@ def main() -> None:
     outlier_path = args.output_dir / "linear_regression_outliers.csv"
     clean.to_csv(clean_path, index=False)
     with_outliers.to_csv(outlier_path, index=False)
-    print(f"Generated {len(clean)} rows in each dataset:")
-    print(f"  {clean_path}")
-    print(f"  {outlier_path} ({args.outliers} outliers)")
-    print(f"True parameters (w0 bias, w1..w10): {[args.intercept, *TRUE_WEIGHTS.tolist()]}")
-    print(f"Noise std: {args.noise_std}")
+    logger.info("Datasets saved to {} ({} rows each)", args.output_dir, len(clean))
 
 
 if __name__ == "__main__":
